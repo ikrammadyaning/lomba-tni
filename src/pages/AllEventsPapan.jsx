@@ -23,10 +23,20 @@ const AllEventsPapan = () => {
       })
     )
 
+    const parseValue = (val) => (val === null || val === undefined || val === '-') ? -Infinity : Number(val)
+    const sortByHasil = (rows) => [...rows].sort((a, b) => {
+      const aHasil = parseValue(a.hasil)
+      const bHasil = parseValue(b.hasil)
+      const aPerkenaan = parseValue(a.perkenaan)
+      const bPerkenaan = parseValue(b.perkenaan)
+      if (aHasil !== bHasil) return bHasil - aHasil
+      return bPerkenaan - aPerkenaan
+    })
+
     const next = {}
     const nextErrors = []
     results.forEach(({ event, data, error }) => {
-      next[event.id] = data
+      next[event.id] = sortByHasil(data)
       if (error) nextErrors.push(`${event.title.join(' ')} — ${event.category}: ${error.message}`)
     })
     setDataByEvent(next)
@@ -50,9 +60,8 @@ const AllEventsPapan = () => {
   const slides = useMemo(() => {
     return EVENTS.flatMap((event) => {
       const rows = dataByEvent[event.id] || []
-      const rankedRows = [...rows].sort((a, b) => (Number(b.hasil) || 0) - (Number(a.hasil) || 0))
       return [
-        <RankingSlide key={`${event.id}-ranking`} rows={rows} rankedRows={rankedRows} event={event} />,
+        <RankingSlide key={`${event.id}-ranking`} rows={rows} event={event} />,
         <ParticipantTableSlide key={`${event.id}-table`} rows={rows} event={event} />,
       ]
     })
